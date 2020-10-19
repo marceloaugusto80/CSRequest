@@ -1,2 +1,2 @@
-# HttpLazy
-Http client helper methods.
+# CSRequest
+Http client helper methods for C#.
