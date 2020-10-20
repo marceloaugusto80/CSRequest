@@ -46,7 +46,7 @@ namespace CSRequest
             return content;
         }
 
-        public static void AddAsFormData(this MultipartFormDataContent form, object obj)
+        public static void AddFormData(this MultipartFormDataContent form, object obj)
         {
             if (obj == null) return;
 
@@ -59,7 +59,7 @@ namespace CSRequest
 
         }
 
-        public static void AddAsFormFile(this MultipartFormDataContent form, Stream stream, string fileName)
+        public static void AddFormFile(this MultipartFormDataContent form, Stream stream, string fileName)
         {
             form.Add(new StreamContent(stream), fileName, fileName);
         }

@@ -38,9 +38,14 @@ namespace CSRequest
             data = new RequestData();
         }
 
-        public Request InjectClient(Func<HttpClient> clientResolver)
+        /// <summary>
+        /// Overrides the <see cref="DefaultClientFactory"/> function.
+        /// </summary>
+        /// <param name="clientInjector">The factory funcion.</param>
+        /// <returns>This <see cref="Request"/> instance.</returns>
+        public Request InjectClient(Func<HttpClient> clientInjector)
         {
-            this.clientInjector = clientResolver;
+            this.clientInjector = clientInjector;
             return this;
         }
 

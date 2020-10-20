@@ -54,10 +54,10 @@ namespace CSRequest
             {
                 var content = new MultipartFormDataContent();
 
-                content.AddAsFormData(FormData);
+                content.AddFormData(FormData);
 
                 foreach (var file in FormFiles)
-                    content.AddAsFormFile(file.Value, file.Key);
+                    content.AddFormFile(file.Value, file.Key);
 
                 request.Content = content;
             }
