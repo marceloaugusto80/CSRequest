@@ -136,9 +136,21 @@ namespace CSRequest
 
         public Task<HttpResponseMessage> PostAsync() => RequestAsync(HttpMethod.Post);
 
+        public Task<HttpResponseMessage> PutAsync() => RequestAsync(HttpMethod.Put);
+        
+        public Task<HttpResponseMessage> PatchAsync() => RequestAsync(HttpMethod.Patch);
+        
+        public Task<HttpResponseMessage> DeleteAsync() => RequestAsync(HttpMethod.Delete);
+
         public HttpResponseMessage Get() => GetAsync().Result;
 
         public HttpResponseMessage Post() => PostAsync().Result;
+        
+        public HttpResponseMessage Put() => PutAsync().Result;
+        
+        public HttpResponseMessage Patch() => PatchAsync().Result;
+        
+        public HttpResponseMessage Delete() => DeleteAsync().Result;
 
         private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
         {
