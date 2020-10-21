@@ -33,15 +33,12 @@ namespace CSRequest
             return $"?{string.Join('&', parameters)}";
         }
 
-        public static MultipartContent ToJsonContent(this object obj)
+        public static HttpContent ToJsonContent(this object obj)
         {
             if (obj == null) return null;
 
-            var content = new MultipartContent();
-
             var json = JsonConvert.SerializeObject(obj);
-            var jsonContent = new StringContent(json);
-            content.Add(jsonContent);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             return content;
         }

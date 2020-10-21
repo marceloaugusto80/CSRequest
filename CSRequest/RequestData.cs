@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 
 namespace CSRequest
 {
-    internal class RequestData
+    public class RequestData
     {
         public string BearerToken { get; set; }
         public object Query { get; set; }
@@ -23,7 +23,7 @@ namespace CSRequest
             this.SegmentList = new List<string>();
         }
 
-        public HttpRequestMessage BuildRequest(HttpMethod method)
+        internal HttpRequestMessage BuildRequest(HttpMethod method)
         {
             string query = Query.ToQueryString();
             string url = SegmentList.ToUrlPath();
@@ -73,10 +73,6 @@ namespace CSRequest
 
             return request;
         }
-
-
-
-
 
     }
 

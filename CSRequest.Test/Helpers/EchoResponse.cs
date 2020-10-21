@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace CSRequest.Test.Helpers
 {
@@ -9,6 +10,7 @@ namespace CSRequest.Test.Helpers
         public Dictionary<string, string> Headers { get; set; }
         public Dictionary<string, string> Form { get; set; }
         public Dictionary<string, string> Files { get; set; }
-
+        public Dictionary<string, string> Cookies { get; set; }
+        public JObject Json { get; set; }
     }
 }

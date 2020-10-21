@@ -26,17 +26,19 @@ namespace CSRequest
             }
         }
 
-        private readonly RequestData data;
         private Func<HttpClient> clientInjector;
         private Action<HttpClient> clientConfig;
         private Action<HttpResponseMessage> onSuccess;
         private Action<HttpResponseMessage> onError;
-        private Action<Dictionary<string, string>> onGetCookies;
+        
+        public RequestData Data { get; }
 
         public Request()
         {
-            data = new RequestData();
+            Data = new RequestData();
         }
+
+        #region fluent interface
 
         /// <summary>
         /// Overrides the <see cref="DefaultClientFactory"/> function.
@@ -45,7 +47,7 @@ namespace CSRequest
         /// <returns>This <see cref="Request"/> instance.</returns>
         public Request InjectClient(Func<HttpClient> clientInjector)
         {
-            this.clientInjector = clientInjector;
+            this.clientInjector = clientInjector ?? throw new ArgumentNullException(nameof(clientInjector));
             return this;
         }
 
@@ -57,26 +59,27 @@ namespace CSRequest
 
         public Request WithSegments(params string[] segments)
         {
-            data.SegmentList.AddRange(segments);
+            if (segments == null) throw new ArgumentNullException(nameof(segments));
+            Data.SegmentList.AddRange(segments);
             return this;
         }
 
         public Request WithHeader(object header)
         {
-            data.Header = header;
+            Data.Header = header;
             return this;
         }
 
         public Request AddOABearerToken(string token)
         {
-            data.BearerToken = token;
+            Data.BearerToken = token;
             return this;
         }
 
         public Request AddFormFile(Stream stream, string fileName = null)
         {
             var name = fileName ?? Path.GetRandomFileName();
-            data.FormFiles.Add(name, stream);
+            Data.FormFiles.Add(name, stream);
             return this;
         }
 
@@ -91,19 +94,19 @@ namespace CSRequest
 
         public Request WithQuery(object query)
         {
-            data.Query = query;
+            Data.Query = query;
             return this;
         }
 
         public Request WithFormData(object formData)
         {
-            data.FormData = formData;
+            Data.FormData = formData;
             return this;
         }
 
         public Request WithCookies(object cookies)
         {
-            data.CookieObj = cookies;
+            Data.CookieObj = cookies;
             return this;
         }
 
@@ -119,43 +122,15 @@ namespace CSRequest
             return this;
         }
 
-        public Request OnGetCookies(Action<Dictionary<string, string>> onGetCookiesCallback)
+        public Request WithJsonBody(object body)
         {
-            onGetCookies = onGetCookiesCallback;
+            Data.JsonBody = body;
             return this;
         }
 
-        private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
-        {
-            HttpClient client = clientInjector == null ? defaultClientFactory.Invoke() : clientInjector.Invoke();
-            if (client == null) throw new Exception("Client cannot be null.");
+        #endregion
 
-            clientConfig?.Invoke(client);
-
-            using HttpRequestMessage request = data.BuildRequest(method);
-
-            try
-            {
-                var response = await client.SendAsync(request).ConfigureAwait(false);
-
-                if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
-                else onError?.Invoke(response);
-
-                if (onGetCookies != null && response.Headers.Contains("Set-Cookie"))
-                {
-                    var cookies = response.Headers
-                        .Where(h => h.Key == "Set-Cookie")
-                        .ToDictionary(kv => kv.Key, kv => string.Join(',', kv.Value));
-                    if (cookies.Count > 0) onGetCookies(cookies);
-                }
-
-                return response;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
+        #region request execution
 
         public Task<HttpResponseMessage> GetAsync() => RequestAsync(HttpMethod.Get);
 
@@ -165,6 +140,29 @@ namespace CSRequest
 
         public HttpResponseMessage Post() => PostAsync().Result;
 
+        private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
+        {
+            var clientFactory = clientInjector ?? defaultClientFactory;
+
+            if (clientFactory == null)
+                throw new Exception($"You must define a HttpClient in {nameof(InjectClient)} method or {nameof(DefaultClientFactory)} property.");
+
+            HttpClient client = clientFactory.Invoke();
+            if (client == null) throw new Exception("Client resolved to null. Check how you're injecting the HttpClient instance.");
+
+            clientConfig?.Invoke(client);
+
+            using HttpRequestMessage request = Data.BuildRequest(method);
+
+            var response = await client.SendAsync(request).ConfigureAwait(false);
+            
+            if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
+            else onError?.Invoke(response);
+
+            return response;
+        }
+
+        #endregion
 
     }
 
