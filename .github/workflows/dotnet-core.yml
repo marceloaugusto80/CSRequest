@@ -19,8 +19,6 @@ jobs:
       with:
         dotnet-version: 3.1.301
         source-url: https://api.nuget.org/v3/index.json
-      env: 
-        NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
     - name: Install dependencies
       run: dotnet restore
     - name: Build
@@ -30,4 +28,4 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release -o out --verbosity normal --include-symbols
     - name: Push
-      run: dotnet nuget push out/*.nupkg --skip-duplicate
+      run: dotnet nuget push out/*.nupkg --skip-duplicate -k ${{secrets.NUGET_TOKEN}}
