@@ -1,0 +1,33 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    types: [closed]
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+        source-url: https://api.nuget.org/v3/index.json
+      env: 
+        NUGET_TOKEN: ${{secrets.NUGET_TOKEN}}
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+    - name: Pack
+      run: dotnet pack --configuration Release -o out --verbosity normal --include-symbols
+    - name: Push
+      run: dotnet nuget push CSRequest/out/*.nupkg --skip-duplicate
