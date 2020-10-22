@@ -2,10 +2,9 @@ name: .NET Core
 
 on:
   push:
-    branches: [ marceloaugusto80-dev-pipeline ]
+    branches: [ master ]
   pull_request:
-    types: [closed]
-    branches: [ marceloaugusto80-dev-pipeline ]
+    branches: [ master ]
 
 jobs:
   build:

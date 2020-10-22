@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <PackageId>CSRequest</PackageId>
-        <Version>0.1.2-beta1</Version>
+        <Version>0.1.3-beta1</Version>
         <Authors>Marcelo A. R. Alves</Authors>
         <Company>My Office</Company>
         <Description>Wrappers and helper classes to .Net HttpClient.</Description>
