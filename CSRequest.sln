@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSRequest.Test", "CSRequest
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_git", "_git", "{B6B272FC-59CA-4596-A759-FBD0258F5AF9}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
 		README.md = README.md
+		version = version
 	EndProjectSection
 EndProject
 Global
