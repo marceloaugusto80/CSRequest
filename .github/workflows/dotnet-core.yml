@@ -30,4 +30,4 @@ jobs:
     - name: Pack
       run: dotnet pack --configuration Release -o out --verbosity normal --include-symbols
     - name: Push
-      run: dotnet nuget push CSRequest/out/*.nupkg --skip-duplicate
+      run: dotnet nuget push out/*.nupkg --skip-duplicate
