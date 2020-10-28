@@ -1,13 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <PackageId>CSRequest</PackageId>
-        <Version>0.2.0-beta1</Version>
+        <Version>0.2.1-beta1</Version>
         <Authors>Marcelo A. R. Alves</Authors>
         <Company>My Office</Company>
         <Description>Wrappers and helper classes to .Net HttpClient.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>httpclient, client, helper, fluent, request, url</PackageTags>
+        <RepositoryUrl>https://github.com/marceloaugusto80/CSRequest</RepositoryUrl>
     </PropertyGroup>
     
     <ItemGroup>
