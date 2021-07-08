@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace CSRequest
 {
+    /// <summary>
+    /// Main class for http requests.
+    /// </summary>
     public class Request
     {
         private static readonly object defaultFactoryLock = new object();
@@ -35,6 +38,9 @@ namespace CSRequest
         private Action<HttpResponseMessage> onSuccess;
         private Action<HttpResponseMessage> onError;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public Request()
         {
             data = new RequestData();
@@ -45,7 +51,7 @@ namespace CSRequest
         /// <summary>
         /// Overrides the <see cref="DefaultClientFactory"/> function.
         /// </summary>
-        /// <param name="clientInjector">A function to inject a <see cref="HttpClient/>"/>.></param>
+        /// <param name="clientInjector">A function to inject a <see cref="HttpClient"/>/>.></param>
         /// <returns>Fluent.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public Request InjectClient(Func<HttpClient> clientInjector)
@@ -129,7 +135,7 @@ namespace CSRequest
         }
 
         /// <summary>
-        /// Appends a query string to the url. new { foo="bar", bar="foo"} will be evaluated to ?foo=bar&bar=foo.
+        /// Appends a query string to the url. new { foo="bar", bar="foo"} will be evaluated to ?foo=bar&amp;bar=foo.
         /// </summary>
         /// <param name="query">The object to be converted into a query string.</param>
         /// <returns>Fluent.</returns>
@@ -187,7 +193,7 @@ namespace CSRequest
         /// Adds a json object in the request body. Sets the content-type to application/json.
         /// </summary>
         /// <param name="body">The object to be converted into a json object.</param>
-        /// <remarks>Overrides <see cref="WithFormData"/> and <see cref="AddFormFile"/> functions.</remarks>
+        /// <remarks>Overrides <see cref="WithFormData"/> and <see cref="AddFormFile(Stream, string)"/> functions.</remarks>
         /// <returns>fluent.</returns>
         public Request WithJsonBody(object body)
         {
