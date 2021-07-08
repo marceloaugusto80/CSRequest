@@ -54,6 +54,7 @@ namespace CSRequest.Test
 
             var actual = await response.ReadStreamAsync();
 
+            actual.Position.Should().Be(0);
             actual.Length.Should().BePositive();
         }
     }
