@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageId>CSRequest</PackageId>
         <Version>0.2.2-beta1</Version>
         <Authors>Marcelo A. R. Alves</Authors>
@@ -10,8 +11,9 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>httpclient, client, helper, fluent, request, url</PackageTags>
         <RepositoryUrl>https://github.com/marceloaugusto80/CSRequest</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/marceloaugusto80/CSRequest</PackageProjectUrl>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>
