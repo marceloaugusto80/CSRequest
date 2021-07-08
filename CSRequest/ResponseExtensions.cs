@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace CSRequest
 {
+    /// <summary>
+    /// Extension methods for responses.
+    /// </summary>
     public static class ResponseExtensions
     {
         /// <summary>
