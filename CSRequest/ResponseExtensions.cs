@@ -92,6 +92,7 @@ namespace CSRequest
                 var memory = new MemoryStream();
                 using var responseStream = await msg.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await responseStream.CopyToAsync(memory);
+                if (memory.CanSeek) memory.Seek(0, SeekOrigin.Begin);
                 return memory;
             }
             catch (Exception)
