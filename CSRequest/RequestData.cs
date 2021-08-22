@@ -8,6 +8,7 @@ namespace CSRequest
 {
     internal class RequestData
     {
+        private readonly string baseUrl;
         public string BearerToken { get; set; }
         public object Query { get; set; }
         public object Header { get; set; }
@@ -17,25 +18,29 @@ namespace CSRequest
         public Dictionary<string, Stream> FormFiles { get; }
         public List<string> SegmentList { get; }
 
-        public RequestData()
+        public RequestData(string baseUrl = null)
         {
             this.FormFiles = new Dictionary<string, Stream>();
             this.SegmentList = new List<string>();
+            this.baseUrl = baseUrl;
         }
 
         public HttpRequestMessage BuildRequest(HttpMethod method)
         {
+            // TODO solve double slash issues
+            string segments = SegmentList.ToUrlPath();
             string query = Query.ToQueryString();
-            string url = SegmentList.ToUrlPath();
-            var request = new HttpRequestMessage(method, url + query);
+            string fullUrl = $"{baseUrl}/{segments}{query}";
+            
+            var request = new HttpRequestMessage(method, fullUrl);
 
             // headers
 
             if (Header != null)
             {
-                foreach (var kv in Header.ToDictionary())
+                foreach (var kv in Header.ToHeaderDictionary())
                 {
-                    request.Headers.Add(kv.Key, Convert.ToString(kv.Value));
+                    request.Headers.Add(kv.Key, kv.Value);
                 }
             }
 

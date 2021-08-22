@@ -12,11 +12,18 @@ namespace CSRequest
     /// </summary>
     public class Request
     {
+        private static readonly Lazy<HttpClient> defaultClient;
         private static readonly object defaultFactoryLock = new object();
+        private static Func<string, HttpClient> defaultFactoryV2;
         private static Func<HttpClient> defaultClientFactory;
         /// <summary>
-        /// Defines the default <see cref="HttpClient"/> used to execute http requests./>
+        /// Defines the default <see cref="HttpClient"/> used to execute http requests.<br/>
+        /// For performance reasons, define this property only once in your app initialization.<br/>
+        /// IMPORTANT: This class will NOT dispose the <see cref="HttpClient"/>. It's up to you to implement the logic to dispose it (or not).<br/>
+        /// DEPRECATION NOTE: Use SetHttpClientFactory instead of this property.
+        /// See: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-5.0#remarks
         /// </summary>
+        [Obsolete]
         public static Func<HttpClient> DefaultClientFactory
         {
             get
@@ -33,39 +40,100 @@ namespace CSRequest
         }
 
         private readonly RequestData data;
-        private Func<HttpClient> clientInjector;
+        [Obsolete]
         private Action<HttpClient> clientConfig;
         private Action<HttpResponseMessage> onSuccess;
         private Action<HttpResponseMessage> onError;
+        /// <summary>
+        /// The <see cref="HttpClient"/> instance used to make requests.
+        /// </summary>
+        public HttpClient Client { get; private set; }
+        /// <summary>
+        /// The request url.
+        /// </summary>
+        public string BaseUrl { get; }
+
+        #region initialization
+
+        static Request()
+        {
+            defaultClient = new Lazy<HttpClient>(() => new HttpClient());
+        }
 
         /// <summary>
-        /// Constructor.
+        /// Initialize a new instance of <see cref="Request"/>.<br/>
+        /// This instance will use the client defined in the <see cref="SetHttpClientFactory(Func{string, HttpClient})"/> static function if configured. Otherwise, this class will use an internal <see cref="HttpClient"/> singleton to make requests.
         /// </summary>
-        public Request()
+        /// <param name="baseUrl">The base url of the request.</param>
+        /// <remarks></remarks>
+        public Request(string baseUrl)
         {
-            data = new RequestData();
+            BaseUrl = baseUrl;
+            data = new RequestData(baseUrl);
+            Client = defaultClientFactory?.Invoke() ?? defaultFactoryV2?.Invoke(baseUrl) ?? defaultClient.Value;
         }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="Request"/> that will use the provided <see cref="HttpClient"/> to make requests.
+        /// </summary>
+        /// <param name="httpClient">The client that will be used to make requests.</param>
+        /// <param name="baseUrl">The base url of the request.</param>
+        public Request(HttpClient httpClient, string baseUrl) : this(baseUrl: baseUrl)
+        {
+            Client = httpClient;
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="Request"/>.<br/>
+        /// This instance will use the client defined in the <see cref="SetHttpClientFactory(Func{string, HttpClient})"/> static function if configured. Otherwise, this class will use an internal <see cref="HttpClient"/> singleton to make requests.
+        /// </summary>
+        public Request() : this(baseUrl: null)
+        {
+        }
+
+        /// <summary>
+        /// Sets the function that will be called to create a <see cref="HttpClient"/> internally. <br/>
+        /// For performance reasons, define this property only once in your app initialization.<br/>
+        /// IMPORTANT: This class will NOT dispose the <see cref="HttpClient"/>. It's up to you to implement the logic to dispose it (or not).<br/>
+        /// See: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-5.0#remarks
+        /// </summary>
+        /// <param name="factoryFunction">
+        /// The function that creates the <see cref="HttpClient"/> to execute requests.<br/>
+        /// The base url defined in the constructor will be the parameter of this function. If no base url is provided, the parameter will be null.
+        /// </param>
+        public static void SetHttpClientFactory(Func<string, HttpClient> factoryFunction)
+        {
+            lock(defaultFactoryLock)
+            {
+                defaultFactoryV2 = factoryFunction;
+            }
+        }
+
+        #endregion
 
         #region fluent interface
 
         /// <summary>
         /// Overrides the <see cref="DefaultClientFactory"/> function.
         /// </summary>
-        /// <param name="clientInjector">A function to inject a <see cref="HttpClient"/>/>.></param>
+        /// <param name="clientInjector">A function to inject a <see cref="Client"/>/>.></param>
         /// <returns>Fluent.</returns>
         /// <exception cref="ArgumentNullException"></exception>
+        [Obsolete("Use the constructor overload to inject the HttpClient")]
         public Request InjectClient(Func<HttpClient> clientInjector)
         {
-            this.clientInjector = clientInjector ?? throw new ArgumentNullException(nameof(clientInjector));
+            if (clientInjector == null) throw new ArgumentNullException(nameof(clientInjector));
+            this.Client = clientInjector.Invoke();
             return this;
         }
 
         /// <summary>
-        /// Configure the injected <see cref="HttpClient"/> used to make request./>
+        /// Configure the injected <see cref="Client"/> used to make requests./>
         /// </summary>
         /// <param name="clientConfig">The configuration function.</param>
         /// <returns>Fluent.</returns>
         /// <exception cref="ArgumentNullException"></exception>
+        [Obsolete("This method will be removed in future releases because changes in HttpClient is not thread safe. See: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-5.0#remarks")]
         public Request ConfigureClient(Action<HttpClient> clientConfig)
         {
             this.clientConfig = clientConfig ?? throw new ArgumentNullException(nameof(clientConfig));
@@ -86,7 +154,8 @@ namespace CSRequest
         }
 
         /// <summary>
-        /// Add headers to the request. new { foo = "bar" } will be evaluated to foo=bar.
+        /// Add headers to the request. new { foo = "bar" } will be evaluated to foo: bar.<br/>
+        /// Underscores (_) are translated to dashes (-), like: new { Content_type = "plain/text" } will be evaluated to Content-type: plain/text.
         /// </summary>
         /// <param name="header">An object that representes the headers.</param>
         /// <returns>Fluent.</returns>
@@ -267,24 +336,24 @@ namespace CSRequest
 
         private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
         {
-            var clientFactory = clientInjector ?? defaultClientFactory;
+            if (Client == null)
+                throw new Exception($"You must define a {nameof(HttpClient)} in the constructor or statically in {nameof(SetHttpClientFactory)} method.");
 
-            if (clientFactory == null)
-                throw new Exception($"You must define a HttpClient in {nameof(InjectClient)} method or {nameof(DefaultClientFactory)} property.");
-
-            HttpClient client = clientFactory.Invoke();
-            if (client == null) throw new Exception("Client resolved to null. Check how you're injecting the HttpClient instance.");
-
-            clientConfig?.Invoke(client);
+            clientConfig?.Invoke(Client);
 
             using HttpRequestMessage request = data.BuildRequest(method);
-
-            var response = await client.SendAsync(request).ConfigureAwait(false);
+            try
+            {
+                var response = await Client.SendAsync(request).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
+                else onError?.Invoke(response);
+                return response;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
             
-            if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
-            else onError?.Invoke(response);
-
-            return response;
         }
 
         #endregion
