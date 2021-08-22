@@ -15,14 +15,13 @@ namespace CSRequest
         public static Dictionary<string, object> ToDictionary(this object obj)
         {
             if (obj == null) return null;
-
             var props = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
             return props.ToDictionary(p => p.Name, p => p.GetValue(obj));
         }
 
         public static string ToQueryString(this object obj)
         {
+            // TODO optimize string operations
             if (obj == null) return string.Empty;
 
             var dic = obj.ToDictionary();
@@ -31,6 +30,16 @@ namespace CSRequest
                 kv => $"{HttpUtility.UrlEncode(kv.Key)}={HttpUtility.UrlEncode(Convert.ToString(kv.Value))}");
 
             return $"?{string.Join('&', parameters)}";
+        }
+
+        /// <summary>
+        /// Object property names with '_' will be replaced with '-'
+        /// </summary>
+        public static Dictionary<string, string> ToHeaderDictionary(this object obj)
+        {
+            if (obj == null) return null;
+            var props = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            return props.ToDictionary(p => p.Name.Replace('_', '-'), p => p.GetValue(obj).ToString());
         }
 
         public static HttpContent ToJsonContent(this object obj)
