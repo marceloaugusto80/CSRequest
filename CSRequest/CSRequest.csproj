@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageId>CSRequest</PackageId>
-        <Version>1.2.0</Version>
+        <Version>1.2.1</Version>
         <Authors>Marcelo A. R. Alves</Authors>
         <Company>My Office</Company>
         <Description>Wrappers and helper classes to .Net HttpClient.</Description>

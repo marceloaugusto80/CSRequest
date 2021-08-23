@@ -19,16 +19,6 @@ namespace CSRequest
         private readonly HttpClient client;
 
         /// <summary>
-        /// Initialize a new instance of <see cref="Request"/> class.<br/>
-        /// This instance will use an internal reusable HttpClient singleton or the one defined in the <see cref="RequestConfiguration.SetHttpClientFactory(Func{string, HttpClient})"/> static function.
-        /// </summary>
-        /// <param name="baseUrl">The base url of the request.</param>
-        /// <remarks></remarks>
-        public Request(string baseUrl) : this(baseUrl, RequestConfiguration.GetClient(baseUrl))
-        {
-        }
-
-        /// <summary>
         /// Initialize a new instance of <see cref="Request"/> class that will use the provided <see cref="HttpClient"/> to make requests.
         /// </summary>
         /// <param name="baseUrl">The base url of the request.</param>
@@ -40,6 +30,31 @@ namespace CSRequest
             client = httpClient;
         }
 
+        /// <summary>
+        /// Initialize a new instance of <see cref="Request"/> class.<br/>
+        /// This instance will use an internal reusable HttpClient singleton or the one defined in the <see cref="RequestConfiguration.SetHttpClientFactory(Func{string, HttpClient})"/> static function.
+        /// </summary>
+        /// <param name="baseUrl">The base url of the request.</param>
+        /// <remarks></remarks>
+        public Request(string baseUrl) : this(baseUrl, RequestConfiguration.GetClient(baseUrl))
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="Request"/> class.<br/>
+        /// Make sure <see cref="HttpClient.BaseAddress"/> is defined in the client injected via <see cref="RequestConfiguration.SetHttpClientFactory(Func{string, HttpClient})"/>
+        /// </summary>
+        public Request() : this(string.Empty)
+        { }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="Request"/> class.<br/>
+        /// Make sure <see cref="HttpClient.BaseAddress"/> is defined in the provided client.
+        /// </summary>
+        /// <param name="client">The client used to make requests.</param>
+        public Request(HttpClient client) : this(string.Empty, client)
+        { }
+
         private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
         {
             if (client == null)
@@ -48,10 +63,22 @@ namespace CSRequest
                     $"You must define a {nameof(HttpClient)} in the constructor or statically in {nameof(RequestConfiguration.SetHttpClientFactory)} method.");
             }
 
+            var resolvedUri = string.IsNullOrEmpty(baseUrl) ? 
+                client.BaseAddress : 
+                new Uri(baseUrl, UriKind.Absolute);
+
+            if(resolvedUri == null)
+            {
+                throw new Exception($"Could not resolve request url. Set the ulr in the constructor or the in the injected HttpClient BaseUri property.");
+            }
+
             try
             {
-
-                using HttpRequestMessage request = new HttpRequestMessage(method, baseUrl);
+                using HttpRequestMessage request = new HttpRequestMessage()
+                {
+                    RequestUri = resolvedUri,
+                    Method = method
+                };
                 foreach (var transform in transforms)
                 {
                     transform.Transform(request);
