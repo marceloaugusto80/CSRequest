@@ -23,7 +23,7 @@ namespace CSRequest
 
             using var response = await new Request(client).WithSegments("get").GetAsync();
             var echo = await response.ReadJsonAsync<EchoResponse>();
-            
+
             echo.Url.Should().Be(url + "/get");
         }
 
@@ -53,8 +53,8 @@ namespace CSRequest
         [Fact]
         public async Task Initialization_inject_nothing()
         {
-            Func<Task> action = ()=> new Request().WithSegments("get").GetAsync();
-            
+            Func<Task> action = () => new Request().WithSegments("get").GetAsync();
+
             await action.Should().ThrowAsync<Exception>().WithMessage("Could not resolve request url*");
         }
 
