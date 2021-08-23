@@ -4,6 +4,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <RootNamespace>CSRequest</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,6 +45,10 @@
     <Compile Update="Request_Test.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Internal\" />
   </ItemGroup>
 
 </Project>

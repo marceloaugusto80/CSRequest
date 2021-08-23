@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSRequest.Internal;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,149 +8,86 @@ using System.Threading.Tasks;
 
 namespace CSRequest
 {
+
     /// <summary>
     /// Main class for http requests.
     /// </summary>
-    public class Request
+    public partial class Request
     {
-        private static readonly Lazy<HttpClient> defaultClient;
-        private static readonly object defaultFactoryLock = new object();
-        private static Func<string, HttpClient> defaultFactoryV2;
-        private static Func<HttpClient> defaultClientFactory;
-        /// <summary>
-        /// Defines the default <see cref="HttpClient"/> used to execute http requests.<br/>
-        /// For performance reasons, define this property only once in your app initialization.<br/>
-        /// IMPORTANT: This class will NOT dispose the <see cref="HttpClient"/>. It's up to you to implement the logic to dispose it (or not).<br/>
-        /// DEPRECATION NOTE: Use SetHttpClientFactory instead of this property.
-        /// See: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-5.0#remarks
-        /// </summary>
-        [Obsolete]
-        public static Func<HttpClient> DefaultClientFactory
-        {
-            get
-            {
-                return defaultClientFactory;
-            }
-            set
-            {
-                lock (defaultFactoryLock)
-                {
-                    defaultClientFactory = value;
-                }
-            }
-        }
-
-        private readonly RequestData data;
-        [Obsolete]
-        private Action<HttpClient> clientConfig;
         private Action<HttpResponseMessage> onSuccess;
         private Action<HttpResponseMessage> onError;
-        /// <summary>
-        /// The <see cref="HttpClient"/> instance used to make requests.
-        /// </summary>
-        public HttpClient Client { get; private set; }
-        /// <summary>
-        /// The request url.
-        /// </summary>
-        public string BaseUrl { get; }
-
-        #region initialization
-
-        static Request()
-        {
-            defaultClient = new Lazy<HttpClient>(() => new HttpClient());
-        }
+        private readonly string baseUrl;
+        private readonly List<IRequestTransform> transforms;
+        private readonly HttpClient client;
 
         /// <summary>
-        /// Initialize a new instance of <see cref="Request"/>.<br/>
-        /// This instance will use the client defined in the <see cref="SetHttpClientFactory(Func{string, HttpClient})"/> static function if configured. Otherwise, this class will use an internal <see cref="HttpClient"/> singleton to make requests.
+        /// Initialize a new instance of <see cref="Request"/> class.<br/>
+        /// This instance will use an internal reusable HttpClient singleton or the one defined in the <see cref="RequestConfiguration.SetHttpClientFactory(Func{string, HttpClient})"/> static function.
         /// </summary>
         /// <param name="baseUrl">The base url of the request.</param>
         /// <remarks></remarks>
-        public Request(string baseUrl)
+        public Request(string baseUrl) : this(baseUrl, RequestConfiguration.GetClient(baseUrl))
         {
-            BaseUrl = baseUrl;
-            data = new RequestData(baseUrl);
-            Client = defaultClientFactory?.Invoke() ?? defaultFactoryV2?.Invoke(baseUrl) ?? defaultClient.Value;
         }
 
         /// <summary>
-        /// Initialize a new instance of <see cref="Request"/> that will use the provided <see cref="HttpClient"/> to make requests.
+        /// Initialize a new instance of <see cref="Request"/> class that will use the provided <see cref="HttpClient"/> to make requests.
         /// </summary>
-        /// <param name="httpClient">The client that will be used to make requests.</param>
         /// <param name="baseUrl">The base url of the request.</param>
-        public Request(HttpClient httpClient, string baseUrl) : this(baseUrl: baseUrl)
+        /// <param name="httpClient">The client that will be used to make requests.</param>
+        public Request(string baseUrl, HttpClient httpClient)
         {
-            Client = httpClient;
+            transforms = new List<IRequestTransform>();
+            this.baseUrl = baseUrl;
+            client = httpClient;
         }
 
-        /// <summary>
-        /// Initialize a new instance of <see cref="Request"/>.<br/>
-        /// This instance will use the client defined in the <see cref="SetHttpClientFactory(Func{string, HttpClient})"/> static function if configured. Otherwise, this class will use an internal <see cref="HttpClient"/> singleton to make requests.
-        /// </summary>
-        public Request() : this(baseUrl: null)
+        private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
         {
-        }
-
-        /// <summary>
-        /// Sets the function that will be called to create a <see cref="HttpClient"/> internally. <br/>
-        /// For performance reasons, define this property only once in your app initialization.<br/>
-        /// IMPORTANT: This class will NOT dispose the <see cref="HttpClient"/>. It's up to you to implement the logic to dispose it (or not).<br/>
-        /// See: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-5.0#remarks
-        /// </summary>
-        /// <param name="factoryFunction">
-        /// The function that creates the <see cref="HttpClient"/> to execute requests.<br/>
-        /// The base url defined in the constructor will be the parameter of this function. If no base url is provided, the parameter will be null.
-        /// </param>
-        public static void SetHttpClientFactory(Func<string, HttpClient> factoryFunction)
-        {
-            lock(defaultFactoryLock)
+            if (client == null)
             {
-                defaultFactoryV2 = factoryFunction;
+                throw new Exception(
+                    $"You must define a {nameof(HttpClient)} in the constructor or statically in {nameof(RequestConfiguration.SetHttpClientFactory)} method.");
             }
+
+            try
+            {
+
+                using HttpRequestMessage request = new HttpRequestMessage(method, baseUrl);
+                foreach (var transform in transforms)
+                {
+                    transform.Transform(request);
+                }
+
+                var response = await client.SendAsync(request).ConfigureAwait(false);
+                
+                if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
+                else onError?.Invoke(response);
+                
+                return response;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            
         }
 
-        #endregion
+    }
 
-        #region fluent interface
-
-        /// <summary>
-        /// Overrides the <see cref="DefaultClientFactory"/> function.
-        /// </summary>
-        /// <param name="clientInjector">A function to inject a <see cref="Client"/>/>.></param>
-        /// <returns>Fluent.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        [Obsolete("Use the constructor overload to inject the HttpClient")]
-        public Request InjectClient(Func<HttpClient> clientInjector)
-        {
-            if (clientInjector == null) throw new ArgumentNullException(nameof(clientInjector));
-            this.Client = clientInjector.Invoke();
-            return this;
-        }
-
-        /// <summary>
-        /// Configure the injected <see cref="Client"/> used to make requests./>
-        /// </summary>
-        /// <param name="clientConfig">The configuration function.</param>
-        /// <returns>Fluent.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        [Obsolete("This method will be removed in future releases because changes in HttpClient is not thread safe. See: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=net-5.0#remarks")]
-        public Request ConfigureClient(Action<HttpClient> clientConfig)
-        {
-            this.clientConfig = clientConfig ?? throw new ArgumentNullException(nameof(clientConfig));
-            return this;
-        }
+    public partial class Request
+    {
 
         /// <summary>
         /// Adds segments to the url. ["a", "b", "c"] will be evaluated as to a/b/c.
         /// </summary>
         /// <param name="segments">The segments to add to the request url.</param>
         /// <returns>Fluent</returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException"/>
         public Request WithSegments(params string[] segments)
         {
             if (segments == null) throw new ArgumentNullException(nameof(segments));
-            data.SegmentList.AddRange(segments);
+            transforms.Add(new UrlSegmentsRequestTransform(segments));
             return this;
         }
 
@@ -159,9 +97,11 @@ namespace CSRequest
         /// </summary>
         /// <param name="header">An object that representes the headers.</param>
         /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
         public Request WithHeader(object header)
         {
-            data.Header = header;
+            if (header == null) throw new ArgumentNullException(nameof(header));
+            transforms.Add(new HeaderRequestTransform(header));
             return this;
         }
 
@@ -170,9 +110,11 @@ namespace CSRequest
         /// </summary>
         /// <param name="token">The bearer token. This method doesn't encode the token.</param>
         /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
         public Request AddOABearerToken(string token)
         {
-            data.BearerToken = token;
+            if (token == null) throw new ArgumentNullException(nameof(token));
+            transforms.Add(new BearerTokenRequestTransform(token));
             return this;
         }
 
@@ -180,25 +122,33 @@ namespace CSRequest
         /// Adds a stream to be uploaded. Works like a html's file input element. The request content-type is set to multipart/form-data.
         /// </summary>
         /// <param name="stream">The data stream to be uploaded.</param>
+        /// <param name="fieldName">The name of the form data field related to the file. If none is provided, a random field name will be created.</param>
         /// <param name="fileName">A file name attached to the stream. If none is provided, a random name will be created.</param>
         /// <returns>Fluent.</returns>
-        public Request AddFormFile(Stream stream, string fileName = null)
+        /// <exception cref="ArgumentNullException"/>
+        public Request AddFormFile(Stream stream, string fieldName = null, string fileName = null)
         {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
             var name = fileName ?? Path.GetRandomFileName();
-            data.FormFiles.Add(name, stream);
+            var field = fieldName ?? name;
+            transforms.Add(new FormFileRequestTransform(stream, field, name));
             return this;
         }
 
         /// <summary>
-        /// Adds multiple streams to be uploaded. Works like a html's file input element. The request content-type is set to multipart/form-data.
+        /// Adds multiple streams to be uploaded. Works like a html's file input element. The request content-type is set to multipart/form-data.<br/>
+        /// File names and field names associated with the files will be random.
         /// </summary>
         /// <param name="streams">The data streams to be uploaded. Random file names will be attached to each stream.</param>
         /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
         public Request AddFormFile(IEnumerable<Stream> streams)
         {
+            if (streams == null) throw new ArgumentNullException(nameof(streams));
+            int counter = 0;
             foreach (var stream in streams)
             {
-                AddFormFile(stream);
+                AddFormFile(stream, $"file{counter++}");
             }
             return this;
         }
@@ -208,9 +158,11 @@ namespace CSRequest
         /// </summary>
         /// <param name="query">The object to be converted into a query string.</param>
         /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
         public Request WithQuery(object query)
         {
-            data.Query = query;
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            transforms.Add(new UrlQueryRequestTransform(query));
             return this;
         }
 
@@ -219,9 +171,11 @@ namespace CSRequest
         /// </summary>
         /// <param name="formData">The object to be converted into form data.</param>
         /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
         public Request WithFormData(object formData)
         {
-            data.FormData = formData;
+            if (formData == null) throw new ArgumentNullException(nameof(formData));
+            transforms.Add(new FormDataRequestTransform(formData));
             return this;
         }
 
@@ -230,9 +184,25 @@ namespace CSRequest
         /// </summary>
         /// <param name="cookies">An object that representes the key/values of the cookies.</param>
         /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
         public Request WithCookies(object cookies)
         {
-            data.CookieObj = cookies;
+            if (cookies == null) throw new ArgumentNullException(nameof(cookies));
+            transforms.Add(new CoockieRequestTransform(cookies));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a json object in the request body. Sets the content-type to application/json.
+        /// </summary>
+        /// <param name="body">The object to be converted into a json object.</param>
+        /// <remarks>Overrides <see cref="WithFormData"/> and <see cref="AddFormFile(Stream, string, string)"/> functions.</remarks>
+        /// <returns>fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
+        public Request WithJsonBody(object body)
+        {
+            if (body == null) throw new ArgumentNullException(nameof(body));
+            transforms.Add(new JsonContentRequestTransform(body));
             return this;
         }
 
@@ -258,21 +228,10 @@ namespace CSRequest
             return this;
         }
 
-        /// <summary>
-        /// Adds a json object in the request body. Sets the content-type to application/json.
-        /// </summary>
-        /// <param name="body">The object to be converted into a json object.</param>
-        /// <remarks>Overrides <see cref="WithFormData"/> and <see cref="AddFormFile(Stream, string)"/> functions.</remarks>
-        /// <returns>fluent.</returns>
-        public Request WithJsonBody(object body)
-        {
-            data.JsonBody = body;
-            return this;
-        }
+    }
 
-        #endregion
-
-        #region request execution
+    public partial class Request
+    {
 
         /// <summary>
         /// Performs a get request.
@@ -333,31 +292,5 @@ namespace CSRequest
         /// </summary>
         /// <returns>A <see cref="HttpResponseMessage"/>.</returns>
         public HttpResponseMessage Delete() => DeleteAsync().Result;
-
-        private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
-        {
-            if (Client == null)
-                throw new Exception($"You must define a {nameof(HttpClient)} in the constructor or statically in {nameof(SetHttpClientFactory)} method.");
-
-            clientConfig?.Invoke(Client);
-
-            using HttpRequestMessage request = data.BuildRequest(method);
-            try
-            {
-                var response = await Client.SendAsync(request).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
-                else onError?.Invoke(response);
-                return response;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            
-        }
-
-        #endregion
-
     }
-
 }

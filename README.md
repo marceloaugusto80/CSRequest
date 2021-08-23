@@ -1,23 +1,25 @@
 # CSRequest
 Http client helper methods for C#. </br>
 Internally, this library uses HttpRequestMessage, keeping the state of the HttpClient on every request. </br>
-Ideal for testing web api's. </br>
+
 
 ## Initialization:
-You can inject the HttpClient in the constructor:
+By default, the ```Request``` class will use a ```HttpClient``` singleton to send requests. So, out of the box, you can use it like this:
+```cs
+using var response = await new Request(@"http://foobar.com").GetAsync();
+```
+Or, if you prefer, you can inject the HttpClient in the constructor:
 ```cs
 using var client = new HttpClient();
-var request = new Request(client, @"https://foobar.com");
+var request = new Request(@"https://foobar.com", client);
 ``` 
 Or you can define the HttpClient statically in you app initialization:
 ```cs
-// in you app initialization
-
+// in you app initialization...
 var client = new HttpClient();
-Request.SetHttpClientFactory(url => client);
+RequestConfiguration.SetHttpClientFactory(_ => client);
 
-//or
-
+// ...or
 Request.SetHttpClientFactory(url => 
 {
     if(url == @"https://foobar.com")
@@ -28,25 +30,25 @@ Request.SetHttpClientFactory(url =>
 });
 
 // then, anywhere else
-var request = new Request();
+var request = new Request(@"https://foobar.com");
 
 ```
 ### Executing requests
 Use any of the following methods:
 ```cs
 // async
-using var response = await new Request().GetAsync();
-using var response = await new Request().PostAsync();
-using var response = await new Request().PutAsync();
-using var response = await new Request().PatchAsync();
-using var response = await new Request().DeleteAsync();
+await new Request(@"https://foobar.com").GetAsync();
+await new Request(@"https://foobar.com").PostAsync();
+await new Request(@"https://foobar.com").PutAsync();
+await new Request(@"https://foobar.com").PatchAsync();
+await new Request(@"https://foobar.com").DeleteAsync();
 
 // sync
-using var response = new Request().Get();
-using var response = new Request().Post();
-using var response = new Request().Put();
-using var response = new Request().Patch();
-using var response = new Request().Delete();
+new Request().Get();
+new Request().Post();
+new Request().Put();
+new Request().Patch();
+new Request().Delete();
 ```
 
 

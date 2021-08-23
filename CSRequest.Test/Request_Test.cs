@@ -78,13 +78,13 @@ namespace CSRequest.Test
         }
 
         [Fact]
-        public void Request_send_form_file()
+        public async Task Request_send_form_file()
         {
-            var echo = new Request(echoUrl)
+            var echo = await new Request(echoUrl)
                .WithSegments("post")
-               .AddFormFile(Generators.GenerateStream(), "file1.txt")
+               .AddFormFile(Generators.GenerateStream(), "file1", "file1.txt")
                .Post()
-               .ReadJson<EchoResponse>();
+               .ReadJsonAsync<EchoResponse>();
 
             echo.Files.Should().ContainKey("file1.txt");
         }
