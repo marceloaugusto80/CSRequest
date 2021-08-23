@@ -1,5 +1,5 @@
 # CSRequest
-Http client helper methods for C#. </br>
+Http client helper methods for .Net </br>
 Internally, this library uses HttpRequestMessage, keeping the HttpClient's state on every request. </br>
 
 
