@@ -9,12 +9,28 @@ namespace CSRequest
     public partial class Request
     {
         /// <summary>
-        /// Adds a bearer authorization header token.
+        /// Sends request with basic authentication header.<br/>
+        /// Username and password are converted to base64.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
+        /// <returns>Fluent</returns>
+        /// <exception cref="ArgumentException"/>
+        public Request WithBasicAuthentication(string username, string password)
+        {
+            if (username == null) throw new ArgumentNullException(nameof(username));
+            if (password == null) throw new ArgumentNullException(nameof(password));
+            transforms.Add(new BasicAuthRequestTransform(username, password));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a OAuth bearer token authorization header.
         /// </summary>
         /// <param name="token">The bearer token. This method doesn't encode the token.</param>
         /// <returns>Fluent.</returns>
         /// <exception cref="ArgumentNullException"/>
-        public Request AddOABearerToken(string token)
+        public Request WithBearerTokenAuthentication(string token)
         {
             if (token == null) throw new ArgumentNullException(nameof(token));
             transforms.Add(new BearerTokenRequestTransform(token));
