@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
-using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -68,7 +68,7 @@ namespace CSRequest
             try
             {
                 var json = await msg.ReadStringAsync().ConfigureAwait(false);
-                return JsonConvert.DeserializeObject<dynamic>(json);
+                return JsonConvert.DeserializeObject<ExpandoObject>(json, new ExpandoObjectConverter());
             }
             catch (Exception)
             {

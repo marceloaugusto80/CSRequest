@@ -1,7 +1,5 @@
 ﻿using CSRequest.Test.Helpers;
 using FluentAssertions;
-using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -34,8 +32,8 @@ namespace CSRequest.Test
             using var response = await new Request(echoUrl).WithSegments("get").GetAsync();
 
             var actual = await response.ReadJsonAsync();
-
-            Assert.NotNull(actual);
+            
+            (actual.url as string).Should().Be(echoUrl + "/get");
         }
 
         [Fact]
