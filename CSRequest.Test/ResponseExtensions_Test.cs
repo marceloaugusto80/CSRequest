@@ -34,8 +34,8 @@ namespace CSRequest.Test
             using var response = await new Request(echoUrl).WithSegments("get").GetAsync();
 
             var actual = await response.ReadJsonAsync();
-
-            Assert.NotNull(actual);
+            
+            (actual.url as string).Should().Be(echoUrl + "/get");
         }
 
         [Fact]
