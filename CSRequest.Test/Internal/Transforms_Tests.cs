@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CSRequest.Test.Helpers;
+using FluentAssertions;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using CSRequest.Test.Helpers;
-using FluentAssertions;
 using Xunit;
 
 namespace CSRequest.Internal

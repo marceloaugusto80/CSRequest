@@ -4,7 +4,7 @@ Internally, this library uses HttpRequestMessage, keeping the state of the HttpC
 
 
 ## Initialization:
-By default, the ```Request``` class will use a ```HttpClient``` singleton to send requests. So, out of the box, you can use it like this:
+By default, the ```Request``` class will use an internal ```HttpClient``` singleton to send requests. So, out of the box, you can use it like this:
 ```cs
 using var response = await new Request(@"http://foobar.com").GetAsync();
 ```
@@ -33,6 +33,21 @@ Request.SetHttpClientFactory(url =>
 var request = new Request(@"https://foobar.com");
 
 ```
+
+### Fluent interface
+Concat all request configurations:
+```cs
+using HttpResponseMessage response = await new Request(@"https://foobar.com")
+    .WithSegments("foo", "bar") // url becomes https://foobar.com/foo/bar
+    .WithQuery(new { q1 = 1, q2 = 2 }) // // url becomes https://foobar.com/foo/bar?q1=1&q2=2
+    .WithHeader(new { Content_Type = "application/json" }) // adds header Content-Type: application/json
+    .AddOABearerToken("some-token") // adds header Authorization: Bearer some-token
+    .WithFormData(new { name = "Jonh", age = 30 }) // sets multipart form data
+    .AddFormFile(someStream) // sends form file
+    .PostAsync() // executes a post request
+
+// do something with the response...
+```
 ### Executing requests
 Use any of the following methods:
 ```cs
@@ -52,24 +67,11 @@ new Request().Delete();
 ```
 
 
-### Fluent interface
-Concat all request configurations:
-```cs
-using HttpResponseMessage response = await new Request()
-    .WithSegments("foo", "bar")
-    .WithQuery(new { q1 = 1, q2 = 2 })
-    .WithHeader(new { Content_Type = "application/json" })
-    .AddOABearerToken("some-token")
-    .WithFormData(new { name = "Jonh", age = 30 })
-    .AddFormFile(someStream, "some-file-name.jpg")
-    .PostAsync()
-
-// do something with the response...
-```
 ### Response extensions
 There are some HttpResponseMessage extension methods defined out of the box. They are both implemented in synchronously and asynchronously.
 Examples:
 ```cs
+dynamic myObject = await response.ReadJsonAsync();
 var fooBar = await new Request().Get().ReadJsonAsync<FooBar>();
 string myString = await new Request().Get().ReadStringAsync();
 using var stream = await new Request().Get().ReadStreamAsync();

@@ -1,20 +1,16 @@
-using CSRequest.Test.Helpers;
+﻿using CSRequest.Test.Helpers;
 using FluentAssertions;
-using Newtonsoft.Json;
-using System;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CSRequest.Test
+namespace CSRequest
 {
-    public class Request_Test
+    public class Request_Fluent_Test
     {
         private readonly string echoUrl;
 
-        public Request_Test()
+        public Request_Fluent_Test()
         {
             echoUrl = @"http://postman-echo.com";
         }
@@ -106,7 +102,7 @@ namespace CSRequest.Test
         {
             var echo = new Request(echoUrl)
                .WithSegments("cookies")
-               .WithCookies(new { k1 = "v1", k2 = "v2"})
+               .WithCookies(new { k1 = "v1", k2 = "v2" })
                .Get()
                .ReadJson<EchoResponse>();
 
@@ -127,46 +123,5 @@ namespace CSRequest.Test
 
             actual.Should().Contain("someString", "foo").And.Contain("someNumber", 42);
         }
-
-        [Fact]
-        public void Get_gets()
-        {
-            using var response = new Request(echoUrl).WithSegments("get").Get();
-
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [Fact]
-        public void Post_posts()
-        {
-            using var response = new Request(echoUrl).WithSegments("post").WithFormData(new { foo = "bar" }).Post();
-
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [Fact]
-        public void Put_puts()
-        {
-            using var response = new Request(echoUrl).WithSegments("put").WithFormData(new { foo = "bar" }).Put();
-
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [Fact]
-        public void Patch_patches()
-        {
-            using var response = new Request(echoUrl).WithSegments("patch").WithFormData(new { foo = "bar" }).Patch();
-
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [Fact]
-        public void Delete_deletes()
-        {
-            using var response = new Request(echoUrl).WithSegments("delete").WithFormData(new { foo = "bar" }).Delete();
-
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
     }
 }

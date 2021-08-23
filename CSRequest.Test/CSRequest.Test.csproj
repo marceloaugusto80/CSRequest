@@ -41,10 +41,4 @@
     <Resource Include="xunit.runner.json" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Request_Test.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-  </ItemGroup>
-
 </Project>
