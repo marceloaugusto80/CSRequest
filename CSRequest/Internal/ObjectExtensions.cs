@@ -11,7 +11,7 @@ namespace CSRequest.Internal
             return obj
                 .GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(p => (p.Name.Replace('_', '-'), p.GetValue(obj).ToString()));
+                .Select(p => (p.Name, p.GetValue(obj).ToString()));
         }
     }
 }

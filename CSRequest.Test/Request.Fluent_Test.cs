@@ -57,11 +57,11 @@ namespace CSRequest
         {
             var echo = new Request(echoUrl)
                 .WithSegments("post")
-                .WithFormData(new { k1 = "v1", k2 = "v2" })
+                .WithFormData(new { key_1 = "v1", key_2 = "v2" })
                 .Post()
                 .ReadJson<EchoResponse>();
 
-            echo.Form.Should().Contain("k1", "v1").And.Contain("k2", "v2");
+            echo.Form.Should().Contain("key_1", "v1").And.Contain("key_2", "v2");
         }
 
         [Fact]
