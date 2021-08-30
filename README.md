@@ -111,7 +111,7 @@ new Request().Delete();
 
 
 ### Response extensions
-There are some HttpResponseMessage extension methods defined out of the box. They are both implemented in synchronously and asynchronously.
+There are some HttpResponseMessage extension methods defined out of the box. They are both implemented synchronously and asynchronously.
 Examples:
 ```cs
 dynamic myObject = await new Request().Get().ReadJsonAsync();
