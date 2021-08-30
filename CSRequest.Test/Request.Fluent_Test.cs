@@ -25,7 +25,7 @@ namespace CSRequest
                 .Get()
                 .ReadJsonAsync<EchoResponse>();
 
-            echo.Headers.Should().Contain("authorization", "Basic bXl1c2VyOm15cGFzcw==");
+            echo.Headers.Should().Contain("Authorization", "Basic bXl1c2VyOm15cGFzcw==");
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace CSRequest
                 .Get()
                 .ReadJsonAsync<EchoResponse>();
 
-            echo.Headers.Should().Contain("authorization", "Bearer my-token");
+            echo.Headers.Should().Contain("Authorization", "Bearer my-token");
         }
 
         [Fact]
@@ -95,6 +95,7 @@ namespace CSRequest
                 .WithSegments("get")
                 .WithHeader(new { name1 = "value1", number1 = 1 })
                 .WithHeader(new Dictionary<string, object>() { { "name2", "value2"}, { "number2", 2} })
+                .WithHeader(new { underscore_name = "some_value" })
                 .Get()
                 .ReadJson<EchoResponse>();
 
@@ -102,7 +103,8 @@ namespace CSRequest
                 .Contain("name1", "value1").And
                 .Contain("number1", "1").And
                 .Contain("name2", "value2").And
-                .Contain("number2", "2");
+                .Contain("number2", "2").And
+                .Contain("underscore-name", "some_value");
         }
 
         [Fact]

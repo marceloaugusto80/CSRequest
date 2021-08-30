@@ -20,7 +20,7 @@ namespace CSRequest.Internal
             {
                 foreach (var kv in args.ToDictionary())
                 {
-                    msg.Headers.Add(kv.Key, kv.Value.Replace('_', '-'));
+                    msg.Headers.Add(kv.Key, kv.Value);
                 }
             }
         }
@@ -46,7 +46,7 @@ namespace CSRequest
         public static Request WithHeader(this Request request, object header)
         {
             if (header == null) throw new ArgumentNullException(nameof(header));
-            request.Transforms.Add(new HeaderRequestTransform(new ArgList(header)));
+            request.Transforms.Add(new HeaderRequestTransform(new ArgList(header, (k)=> k.Replace('_', '-'))));
             return request;
         }
 

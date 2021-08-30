@@ -14,9 +14,9 @@ namespace CSRequest.Internal
             this.argsDictionary = keyValues.ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        public ArgList(object obj)
+        public ArgList(object obj, Func<string, string> keyTransform = null)
         {
-            this.argsDictionary = ConvertObjectToDictionary(obj);
+            this.argsDictionary = ConvertObjectToDictionary(obj, keyTransform);
         }
 
         public ArgList(Dictionary<string, object> keyValues)
@@ -29,12 +29,14 @@ namespace CSRequest.Internal
             return argsDictionary;
         }
 
-        private static Dictionary<string, string> ConvertObjectToDictionary(object obj)
+        private static Dictionary<string, string> ConvertObjectToDictionary(object obj, Func<string, string> keyTransform = null)
         {
             return obj
                 .GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .ToDictionary(p => p.Name, p => Convert.ToString(p.GetValue(obj).ToString()));
+                .ToDictionary(
+                    p => keyTransform  == null ? p.Name : keyTransform.Invoke(p.Name), 
+                    p => Convert.ToString(p.GetValue(obj).ToString()));
         }
     }
 }
