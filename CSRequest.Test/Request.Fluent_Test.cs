@@ -25,7 +25,7 @@ namespace CSRequest
                 .Get()
                 .ReadJsonAsync<EchoResponse>();
 
-            echo.Headers.Should().Contain("Authorization", "Basic bXl1c2VyOm15cGFzcw==");
+            echo.Headers.Should().Contain("authorization", "Basic bXl1c2VyOm15cGFzcw==");
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace CSRequest
                 .Get()
                 .ReadJsonAsync<EchoResponse>();
 
-            echo.Headers.Should().Contain("Authorization", "Bearer my-token");
+            echo.Headers.Should().Contain("authorization", "Bearer my-token");
         }
 
         [Fact]
