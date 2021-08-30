@@ -31,7 +31,7 @@ namespace CSRequest
 {
     using Internal;
     using System;
-    
+
     public static class UrlSegmentsExtension
     {
         /// <summary>

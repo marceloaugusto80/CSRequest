@@ -32,7 +32,7 @@ namespace CSRequest
 {
     using CSRequest.Internal;
     using System.Text;
-    
+
     public static class HeaderExtensions
     {
         /// <summary>

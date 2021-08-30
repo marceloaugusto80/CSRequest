@@ -1,6 +1,5 @@
 ﻿using CSRequest.Test.Helpers;
 using FluentAssertions;
-using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
