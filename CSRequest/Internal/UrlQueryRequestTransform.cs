@@ -7,23 +7,21 @@ namespace CSRequest.Internal
 {
     public class UrlQueryRequestTransform : IRequestTransform
     {
-        private readonly object query;
+        private readonly ArgList args;
 
-        public UrlQueryRequestTransform(object query)
+        public UrlQueryRequestTransform(ArgList args)
         {
-            this.query = query;
+            this.args = args;
         }
 
         public void Transform(HttpRequestMessage msg)
         {
-            if (query == null) return;
-
             var sb = new StringBuilder(msg.RequestUri.AbsoluteUri, 256);
             sb.Append('?');
-            foreach (var nv in query.ExtractPropertiesAndValues())
+            foreach (var nv in args.ToDictionary())
             {
                 sb
-                    .Append(HttpUtility.UrlEncode(nv.Name))
+                    .Append(HttpUtility.UrlEncode(nv.Key))
                     .Append('=')
                     .Append(HttpUtility.UrlEncode(nv.Value))
                     .Append('&');
@@ -32,7 +30,60 @@ namespace CSRequest.Internal
             sb.Remove(sb.Length - 1, 1);
 
             msg.RequestUri = new Uri(sb.ToString());
+        }
+    }
+}
 
+namespace CSRequest
+{
+    using Internal;
+    using System;
+    using System.Collections.Generic;
+
+    public static class UrlQueryExtension
+    {
+        /// <summary>
+        /// Appends a query string to the url. new { foo="bar", bar="foo"} will be evaluated to &lt;BASE_URL&gt;?foo=bar&amp;bar=foo.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="query">The object to be converted into a query string.</param>
+        /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
+        public static Request WithQuery(this Request request, object query)
+        {
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            request.Transforms.Add(new UrlQueryRequestTransform(new ArgList(query)));
+            return request;
+        }
+
+        /// <summary>
+        /// Appends a query string to the url.<br/>
+        /// new Dictionary&lt;string, string&gt;(){{ foo="bar", bar="foo"}} will be evaluated to ?foo=bar&amp;bar=foo.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="query">The dictionary to be converted into a query string.</param>
+        /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
+        public static Request WithQuery(this Request request, Dictionary<string, object> query)
+        {
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            request.Transforms.Add(new UrlQueryRequestTransform(new ArgList(query)));
+            return request;
+        }
+
+        /// <summary>
+        /// Appends a query string to the url.<br/>
+        /// [("foo", "bar"), ("bar", "foo")] will be evaluated to ?foo=bar&amp;bar=foo.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="query">The tuples params to be converted into a query string.</param>
+        /// <returns>Fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
+        public static Request WithQuery(this Request request, params (string, string)[] query)
+        {
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            request.Transforms.Add(new UrlQueryRequestTransform(new ArgList(query)));
+            return request;
         }
     }
 }

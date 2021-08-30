@@ -15,7 +15,7 @@ namespace CSRequest
         private Action<HttpResponseMessage> onSuccess;
         private Action<HttpResponseMessage> onError;
         private readonly string baseUrl;
-        private readonly List<IRequestTransform> transforms;
+        internal List<IRequestTransform> Transforms { get; }
         private readonly HttpClient client;
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace CSRequest
         /// <param name="httpClient">The client that will be used to make requests.</param>
         public Request(string baseUrl, HttpClient httpClient)
         {
-            transforms = new List<IRequestTransform>();
+            Transforms = new List<IRequestTransform>();
             this.baseUrl = baseUrl;
             client = httpClient;
         }
@@ -55,6 +55,29 @@ namespace CSRequest
         public Request(HttpClient client) : this(string.Empty, client)
         { }
 
+        /// <summary>
+        /// Set a callback function in case you have a successful status code response.
+        /// </summary>
+        /// <param name="successCallback">A callback to be executed.</param>
+        /// <returns>Fluent.</returns>
+        public Request OnSuccess(Action<HttpResponseMessage> successCallback)
+        {
+            onSuccess = successCallback;
+            return this;
+        }
+
+        /// <summary>
+        /// Set a callback function in case you have a failure status code response.<br/>
+        /// IMPORTANT: This callback will not be called if the request execution throws an exception. Use use try/catch to deal with any eventual exception.
+        /// </summary>
+        /// <param name="errorCallback">A callback to be executed.</param>
+        /// <returns>Fluent.</returns>
+        public Request OnError(Action<HttpResponseMessage> errorCallback)
+        {
+            onError = errorCallback;
+            return this;
+        }
+
         private async Task<HttpResponseMessage> RequestAsync(HttpMethod method)
         {
             if (client == null)
@@ -79,7 +102,7 @@ namespace CSRequest
                     RequestUri = resolvedUri,
                     Method = method
                 };
-                foreach (var transform in transforms)
+                foreach (var transform in Transforms)
                 {
                     transform.Transform(request);
                 }

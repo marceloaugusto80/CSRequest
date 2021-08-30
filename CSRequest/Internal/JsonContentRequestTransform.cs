@@ -20,3 +20,27 @@ namespace CSRequest.Internal
         }
     }
 }
+
+namespace CSRequest
+{
+    using Internal;
+    using System;
+
+    public static class JsonContentExtension
+    {
+        /// <summary>
+        /// Adds a json object in the request body. Sets the content-type to application/json.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="body">The object to be converted into a json object.</param>
+        /// <remarks>Excludes any added form data and form file.</remarks>
+        /// <returns>fluent.</returns>
+        /// <exception cref="ArgumentNullException"/>
+        public static Request WithJsonBody(this Request request, object body)
+        {
+            if (body == null) throw new ArgumentNullException(nameof(body));
+            request.Transforms.Add(new JsonContentRequestTransform(body));
+            return request;
+        }
+    }
+}

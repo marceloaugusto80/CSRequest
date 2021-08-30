@@ -1,6 +1,7 @@
 ﻿using CSRequest.Test.Helpers;
 using FluentAssertions;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Xunit;
@@ -93,11 +94,16 @@ namespace CSRequest
         {
             var echo = new Request(echoUrl)
                 .WithSegments("get")
-                .WithHeader(new { k1 = "v1", k2 = "v2" })
+                .WithHeader(new { name1 = "value1", number1 = 1 })
+                .WithHeader(new Dictionary<string, object>() { { "name2", "value2"}, { "number2", 2} })
                 .Get()
                 .ReadJson<EchoResponse>();
 
-            echo.Headers.Should().Contain("k1", "v1").And.Contain("k2", "v2");
+            echo.Headers.Should()
+                .Contain("name1", "value1").And
+                .Contain("number1", "1").And
+                .Contain("name2", "value2").And
+                .Contain("number2", "2");
         }
 
         [Fact]

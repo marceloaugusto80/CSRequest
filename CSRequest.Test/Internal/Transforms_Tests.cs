@@ -1,33 +1,15 @@
 ﻿using CSRequest.Test.Helpers;
 using FluentAssertions;
+using System;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CSRequest.Internal
 {
     public class Transforms_Tests
     {
-        [Fact]
-        public void BasicAuthRequestTransform_tests()
-        {
-            using var request = new HttpRequestMessage();
-            
-            new BasicAuthRequestTransform("myuser", "mypass").Transform(request);
-
-            request.Headers.GetValues("Authorization").First().Should().Be("Basic bXl1c2VyOm15cGFzcw==");
-        }
-
-        [Fact]
-        public void BearerTokenRequestTransform_tests()
-        {
-            using var request = new HttpRequestMessage();
-
-            new BearerTokenRequestTransform("token").Transform(request);
-
-            request.Headers.GetValues("Authorization").First().Should().Be("Bearer token");
-        }
-
         [Fact]
         public void CookieRequestTransform_tests()
         {
@@ -38,7 +20,7 @@ namespace CSRequest.Internal
                 key2 = "value2"
             };
 
-            new CoockieRequestTransform(cookie).Transform(request);
+            new CoockieRequestTransform(new ArgList(cookie)).Transform(request);
 
             request.Headers.GetValues("Cookie").First().Should().Be("key1=value1;key2=value2");
         }
@@ -53,7 +35,7 @@ namespace CSRequest.Internal
                 key2 = "value2"
             };
 
-            new FormDataRequestTransform(formData).Transform(request);
+            new FormDataRequestTransform(new ArgList(formData)).Transform(request);
 
             request.Content.Headers.GetValues("Content-Type").First().Should().Contain("multipart/form-data;");
         }
@@ -70,6 +52,18 @@ namespace CSRequest.Internal
         }
 
         [Fact]
+        public async Task JsonContentRequestTransform_tests()
+        {
+            using var request = new HttpRequestMessage();
+            var obj = new { foo = "bar", bar = "foo" };
+            
+            new JsonContentRequestTransform(obj).Transform(request);
+
+            request.Content.Headers.ContentType.MediaType.Should().Be("application/json");
+            (await request.Content.ReadAsStringAsync()).Should().Be(@"{""foo"":""bar"",""bar"":""foo""}");
+        }
+
+        [Fact]
         public void HeaderRequestTransform_tests()
         {
             using var request = new HttpRequestMessage();
@@ -79,7 +73,7 @@ namespace CSRequest.Internal
                 bar = "foo"
             };
 
-            new HeaderRequestTransform(header).Transform(request);
+            new HeaderRequestTransform(new ArgList(header)).Transform(request);
 
             request.Headers.GetValues("foo").First().Should().Be("bar");
             request.Headers.GetValues("bar").First().Should().Be("foo");
@@ -95,7 +89,7 @@ namespace CSRequest.Internal
                 bar = "foo"
             };
 
-            new UrlQueryRequestTransform(query).Transform(request);
+            new UrlQueryRequestTransform(new ArgList(query)).Transform(request);
 
             request.RequestUri.AbsoluteUri.Should().Be("http://foobar.com/?foo=bar&bar=foo");
         }

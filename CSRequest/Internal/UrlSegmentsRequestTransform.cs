@@ -26,3 +26,26 @@ namespace CSRequest.Internal
         }
     }
 }
+
+namespace CSRequest
+{
+    using Internal;
+    using System;
+    
+    public static class UrlSegmentsExtension
+    {
+        /// <summary>
+        /// Adds segments to the url. ["a", "b", "c"] will be evaluated as &lt;BASE_URL&gt;/a/b/c.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="segments">The segments to add to the request url.</param>
+        /// <returns>Fluent</returns>
+        /// <exception cref="ArgumentNullException"/>
+        public static Request WithSegments(this Request request, params string[] segments)
+        {
+            if (segments == null) throw new ArgumentNullException(nameof(segments));
+            request.Transforms.Add(new UrlSegmentsRequestTransform(segments));
+            return request;
+        }
+    }
+}
