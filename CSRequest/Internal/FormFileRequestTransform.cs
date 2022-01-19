@@ -50,7 +50,7 @@ namespace CSRequest
             var name = fileName ?? Path.GetRandomFileName();
             var field = fieldName ?? name;
             request.Transforms.Add(new FormFileRequestTransform(stream, field, name));
-            return request  ;
+            return request;
         }
 
         /// <summary>

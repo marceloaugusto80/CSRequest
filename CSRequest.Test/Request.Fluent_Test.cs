@@ -1,9 +1,5 @@
 ﻿using CSRequest.Test.Helpers;
-using FluentAssertions;
-using System.Collections.Generic;
 using System.Net;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace CSRequest
 {
@@ -94,7 +90,7 @@ namespace CSRequest
             var echo = new Request(echoUrl)
                 .WithSegments("get")
                 .WithHeader(new { name1 = "value1", number1 = 1 })
-                .WithHeader(new Dictionary<string, object>() { { "name2", "value2"}, { "number2", 2} })
+                .WithHeader(new Dictionary<string, object>() { { "name2", "value2" }, { "number2", 2 } })
                 .WithHeader(new { underscore_name = "some_value" })
                 .Get()
                 .ReadJson<EchoResponse>();

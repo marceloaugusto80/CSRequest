@@ -86,11 +86,11 @@ namespace CSRequest
                     $"You must define a {nameof(HttpClient)} in the constructor or statically in {nameof(RequestConfiguration.SetHttpClientFactory)} method.");
             }
 
-            var resolvedUri = string.IsNullOrEmpty(baseUrl) ? 
-                client.BaseAddress : 
+            var resolvedUri = string.IsNullOrEmpty(baseUrl) ?
+                client.BaseAddress :
                 new Uri(baseUrl, UriKind.Absolute);
 
-            if(resolvedUri == null)
+            if (resolvedUri == null)
             {
                 throw new Exception($"Could not resolve request url. Set the ulr in the constructor or the in the injected HttpClient BaseUri property.");
             }
@@ -108,17 +108,17 @@ namespace CSRequest
                 }
 
                 var response = await client.SendAsync(request).ConfigureAwait(false);
-                
+
                 if (response.IsSuccessStatusCode) onSuccess?.Invoke(response);
                 else onError?.Invoke(response);
-                
+
                 return response;
             }
             catch (Exception)
             {
                 throw;
             }
-            
+
         }
 
     }

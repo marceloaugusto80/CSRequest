@@ -15,7 +15,7 @@ namespace CSRequest.Internal
         public void Transform(HttpRequestMessage msg)
         {
             var sb = new StringBuilder();
-            foreach(var nv in args.ToDictionary())
+            foreach (var nv in args.ToDictionary())
             {
                 sb
                     .Append(nv.Key)

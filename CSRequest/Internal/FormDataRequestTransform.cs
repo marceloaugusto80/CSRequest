@@ -15,14 +15,14 @@ namespace CSRequest.Internal
         {
             //check if content was already set by FormFileRequestTransform
             var content = msg.Content as MultipartFormDataContent ?? new MultipartFormDataContent();
-            
+
             foreach (var nv in args.ToDictionary())
             {
                 content.Add(new StringContent(nv.Value), nv.Key);
             }
 
             msg.Content = content;
-            
+
         }
     }
 }

@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace CSRequest.Internal
 {
-    public class ArgList
+    public sealed class ArgList
     {
+        private static readonly PropertyInfoCache propCache;
+        static ArgList()
+        {
+            propCache = new PropertyInfoCache();
+        }
+
         private readonly Dictionary<string, string> argsDictionary;
 
         public ArgList(params (string, string)[] keyValues)
@@ -31,12 +36,10 @@ namespace CSRequest.Internal
 
         private static Dictionary<string, string> ConvertObjectToDictionary(object obj, Func<string, string> keyTransform = null)
         {
-            return obj
-                .GetType()
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            return propCache.GetProperties(obj)
                 .ToDictionary(
-                    p => keyTransform  == null ? p.Name : keyTransform.Invoke(p.Name), 
-                    p => Convert.ToString(p.GetValue(obj).ToString()));
+                    p => keyTransform?.Invoke(p.Name) ?? p.Name,
+                    p => Convert.ToString(p.GetValue(obj)));
         }
     }
 }

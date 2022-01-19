@@ -16,7 +16,7 @@ namespace CSRequest.Internal
 
         public void Transform(HttpRequestMessage msg)
         {
-            if(args != null)
+            if (args != null)
             {
                 foreach (var kv in args.ToDictionary())
                 {
@@ -46,7 +46,7 @@ namespace CSRequest
         public static Request WithHeader(this Request request, object header)
         {
             if (header == null) throw new ArgumentNullException(nameof(header));
-            request.Transforms.Add(new HeaderRequestTransform(new ArgList(header, (k)=> k.Replace('_', '-'))));
+            request.Transforms.Add(new HeaderRequestTransform(new ArgList(header, (k) => k.Replace('_', '-'))));
             return request;
         }
 

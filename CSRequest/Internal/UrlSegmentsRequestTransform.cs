@@ -17,7 +17,7 @@ namespace CSRequest.Internal
         {
             var url = msg.RequestUri.AbsoluteUri;
             var sb = new StringBuilder(url, 256);
-            if(!url.EndsWith('/'))
+            if (!url.EndsWith('/'))
             {
                 sb.Append('/');
             }

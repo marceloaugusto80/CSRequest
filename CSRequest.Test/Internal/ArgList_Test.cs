@@ -1,8 +1,4 @@
-﻿using FluentAssertions;
-using System.Collections.Generic;
-using Xunit;
-
-namespace CSRequest.Internal
+﻿namespace CSRequest.Internal
 {
     public class ArgList_Test
     {
@@ -27,5 +23,6 @@ namespace CSRequest.Internal
             args.ToDictionary().Should().Contain("foo", "bar").And.Contain("number", "1");
 
         }
+
     }
 }

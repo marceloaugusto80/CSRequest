@@ -1,7 +1,4 @@
 ﻿using CSRequest.Test.Helpers;
-using FluentAssertions;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace CSRequest.Test
 {
@@ -32,7 +29,7 @@ namespace CSRequest.Test
             using var response = await new Request(echoUrl).WithSegments("get").GetAsync();
 
             var actual = await response.ReadJsonAsync();
-            
+
             (actual.url as string).Should().Be(echoUrl + "/get");
         }
 
@@ -41,7 +38,7 @@ namespace CSRequest.Test
         {
             using var response = await new Request(ipsumUrl)
                 .WithSegments("api")
-                .WithQuery(new { type = "meat-and-filler", format = "text"})
+                .WithQuery(new { type = "meat-and-filler", format = "text" })
                 .GetAsync();
 
             var actual = await response.ReadStringAsync();

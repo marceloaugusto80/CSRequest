@@ -11,7 +11,7 @@ namespace CSRequest
         private static readonly Lazy<HttpClient> defaultClient;
         private static readonly object defaultFactoryLock = new object();
         private static Func<string, HttpClient> clientFactory;
-        
+
         static RequestConfiguration()
         {
             defaultClient = new Lazy<HttpClient>(() => new HttpClient());

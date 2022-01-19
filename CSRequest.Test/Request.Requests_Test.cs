@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-using System.Net;
-using Xunit;
+﻿using System.Net;
 
 namespace CSRequest
 {
